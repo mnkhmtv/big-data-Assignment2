@@ -1,0 +1,57 @@
+services:
+  cluster-master:
+    image: firasj/spark-docker-cluster
+    platform: linux/amd64
+    container_name: cluster-master
+    ports:
+      - "8088:8088"
+      - "4040:4040"
+      - "19888:19888"
+      - "9000:9000"
+      - "9870:9870"
+    volumes:
+      - "./app:/app"
+    networks:
+      - spark-cluster
+    depends_on:
+      cluster-slave-1:
+        condition: service_started
+      cassandra-server:
+        condition: service_healthy
+    hostname: cluster-master
+    tty: true
+    working_dir: /app
+    entrypoint:
+      - bash
+      - /app/app.sh
+  cluster-slave-1:
+    image: firasj/spark-docker-cluster
+    platform: linux/amd64
+    container_name: cluster-slave-1
+    networks:
+      - spark-cluster
+    hostname: cluster-slave-1
+    tty: true
+  cassandra-server:
+    image: cassandra
+    platform: linux/amd64
+    container_name: cassandra-server
+    networks:
+      - spark-cluster
+    environment:
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=128M
+    mem_limit: 2g
+    volumes:
+      - cassandra_data:/var/lib/cassandra
+    healthcheck:
+      test: ["CMD", "cqlsh", "-e", "describe keyspaces"]
+      interval: 30s
+      timeout: 10s
+      retries: 10
+      start_period: 90s
+networks:
+  spark-cluster:
+    driver: bridge
+volumes:
+  cassandra_data:

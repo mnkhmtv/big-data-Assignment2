@@ -13,8 +13,15 @@ unset PYSPARK_PYTHON
 
 # DOWNLOAD a.parquet before running this
 
-hdfs dfs -put -f a.parquet / && \
-    spark-submit prepare_data.py && \
-    hdfs dfs -ls /data && \
-    hdfs dfs -ls /input/data && \
-    echo "done data preparation!"
+if [ -f "a.parquet" ]; then
+    hdfs dfs -put -f a.parquet / || { echo "[ERROR] Failed to upload a.parquet"; exit 1; }
+else
+    echo "[INFO] a.parquet not found"
+fi
+spark-submit prepare_data.py || { echo "[ERROR] prepare_data.py failed"; exit 1; }
+
+hdfs dfs -ls /data
+
+hdfs dfs -ls /input/data
+
+echo "DONE DATA PREPARATION"

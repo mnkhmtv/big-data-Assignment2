@@ -36,4 +36,5 @@ sleep 30
 
 # Run the ranker
 bash search.sh "machine learning"
-bash search.sh "history of science"
+bash search.sh "music film art"
+bash search.sh "United States"
